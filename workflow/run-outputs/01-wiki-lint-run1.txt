@@ -1,0 +1,7 @@
+Wiki lint：13 頁，來源 ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+  ✗ [R2 數字無引用] bloom.md:20 [注水與擾動](pouring-agitation.md)、[V60 入門食譜](v60-recipe.md)
+  ✗ [R2 數字無引用] brew-ratio.md:12 想沖的水量（mL）× 0.06 = 需要的粉量（g）。
+  ✗ [R2 數字無引用] brew-ratio.md:13 例如 250 mL 水 → 15 g 粉；300 mL 水 → 18 g 粉。
+  ✗ [R2 數字無引用] pouring-agitation.md:19 [悶蒸](bloom.md)、[V60 入門食譜](v60-recipe.md)
+  ✗ [R2 數字無引用] v60-recipe.md:6 - 想沖一人份：等比例縮小，例如 15 g 粉配 250 mL 水（同樣 60 g/L，見 [粉水比](brew-rat
+結果：5 個錯誤，0 個警告

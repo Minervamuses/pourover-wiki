@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>手沖咖啡入門：為什麼我沖的咖啡又酸又苦？</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1F4F3; --sheet:#FFFFFF; --ink:#2B1D16; --ink-soft:#5E4F47;
+  --cherry:#A3233A; --water:#2F6B8A; --water-pale:#DCE9F0; --crema:#D9A441;
+  --line:#CBD3D1;
+  --hand:"LXGW WenKai TC","Kaiti TC","STKaiti","BiauKai",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  box-sizing:border-box;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:var(--sans)}
+body{overflow:hidden}
+a{color:var(--water)}
+:focus-visible{outline:3px solid var(--crema);outline-offset:3px}
+
+/* 舞台：固定 16:9，等比縮放 */
+.viewport{position:fixed;inset:0;display:grid;place-items:center}
+.stage{width:1280px;height:720px;position:relative;transform-origin:center center}
+.slide{position:absolute;inset:0;padding:64px 96px 72px 120px;display:none;flex-direction:column;background:var(--paper)}
+.slide.active{display:flex}
+
+/* 咖啡壺液面＝進度 */
+.carafe{position:fixed;left:28px;top:50%;transform:translateY(-50%);width:14px;height:min(70vh,520px);border:2px solid var(--ink);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;z-index:5}
+.carafe .level{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--ink);transition:height .6s ease}
+.carafe .level::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--crema)}
+@media (prefers-reduced-motion:reduce){.carafe .level{transition:none}}
+
+h1,h2{font-family:var(--hand);font-weight:700;margin:0;letter-spacing:.01em}
+h1{font-size:72px;line-height:1.15}
+h2{font-size:46px;line-height:1.2;margin-bottom:28px}
+p,li{font-size:24px;line-height:1.7}
+.lead{font-size:28px;color:var(--ink-soft);max-width:30em}
+.note{font-size:19px;color:var(--ink-soft)}
+.big{font-family:var(--sans);font-weight:700;font-size:64px;line-height:1;color:var(--water)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.box{background:var(--sheet);border:1.5px solid var(--line);border-radius:6px;padding:22px 26px}
+.box h3{font-family:var(--hand);font-size:28px;margin:0 0 8px}
+.box p{font-size:21px;margin:0}
+.box p.big{font-size:56px;margin-top:10px}
+.tag-cherry{color:var(--cherry);font-weight:700}
+.tag-water{color:var(--water);font-weight:700}
+ul.plain{list-style:none;padding:0;margin:0}
+ul.plain li{padding-left:1.2em;position:relative}
+ul.plain li::before{content:"";position:absolute;left:0;top:.75em;width:.5em;height:.5em;border-radius:50%;background:var(--cherry)}
+.warn{border-left:4px solid var(--crema);padding:8px 16px;background:#FBF3E2;font-size:19px;margin-top:18px}
+
+/* 出處列（由 JS 依 data-wiki/data-src 產生） */
+.trace{position:absolute;left:120px;right:96px;bottom:24px;font-size:15px;color:var(--ink-soft);display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+.trace a{color:var(--ink-soft)}
+.trace strong{color:var(--ink);font-weight:500}
+
+/* 控制 */
+.controls{position:fixed;right:24px;bottom:18px;display:flex;gap:8px;align-items:center;z-index:6;font-size:15px;color:var(--ink-soft)}
+.controls button{font:inherit;font-size:20px;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--ink);background:var(--sheet);color:var(--ink);cursor:pointer}
+.controls button:hover{background:var(--ink);color:var(--sheet)}
+
+/* 封面 */
+.cover{justify-content:center}
+.cover h1{max-width:14em}
+.cover .sub{font-family:var(--hand);font-size:34px;color:var(--cherry);margin:0 0 18px}
+.cover .lead{margin-top:28px}
+
+/* 學習目標：真的是順序，所以用編號 */
+ol.goals{counter-reset:g;list-style:none;padding:0;margin:0;display:grid;gap:22px}
+ol.goals li{counter-increment:g;display:grid;grid-template-columns:72px 1fr;align-items:baseline;font-size:28px}
+ol.goals li::before{content:counter(g);font-family:var(--hand);font-size:56px;color:var(--cherry);line-height:1}
+
+/* 流程 */
+.flow{display:flex;align-items:center;gap:14px;margin:12px 0 30px;flex-wrap:wrap}
+.flow span{font-family:var(--hand);font-size:32px;background:var(--sheet);border:1.5px solid var(--line);border-radius:30px;padding:8px 22px}
+.flow i{font-style:normal;font-size:28px;color:var(--ink-soft)}
+.flow span.key{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* 光譜 */
+.spectrum{display:grid;grid-template-columns:1fr 1fr 1fr;margin-top:8px}
+.spectrum > div{padding:22px 24px;border-top:10px solid}
+.spectrum .under{border-color:#8DB7CC}
+.spectrum .sweet{border-color:var(--crema);background:var(--sheet)}
+.spectrum .over{border-color:var(--ink)}
+.spectrum h3{font-family:var(--hand);font-size:32px;margin:0 0 6px}
+.spectrum p{font-size:21px;margin:0}
+
+/* 三杯 */
+.cups{display:flex;gap:36px;align-items:flex-end;margin:0 0 14px}
+.cup{text-align:center}
+.cup svg{display:block;margin:0 auto 6px}
+.cup b{font-size:30px;color:var(--water)}
+
+/* 旋鈕 */
+.knobs{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.knob{background:var(--sheet);border:1.5px solid var(--line);border-radius:6px;padding:20px 16px;text-align:center}
+.knob .dial{width:64px;height:64px;border-radius:50%;border:3px solid var(--ink);margin:0 auto 12px;position:relative}
+.knob .dial::after{content:"";position:absolute;left:50%;top:6px;width:3px;height:22px;background:var(--cherry);transform-origin:50% 26px;transform:translateX(-50%) rotate(var(--r,0deg))}
+.knob h3{font-family:var(--hand);font-size:28px;margin:0 0 4px}
+.knob p{font-size:18px;margin:0;line-height:1.5}
+.knob.first{border-color:var(--cherry);border-width:2.5px}
+
+/* 計算器 */
+.calc{background:var(--sheet);border:1.5px solid var(--line);border-radius:6px;padding:26px 30px}
+.calc label{font-size:22px;display:block;margin-bottom:10px}
+.calc input[type=range]{width:100%;accent-color:var(--cherry)}
+.calc .out{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.calc .out div{font-size:18px;color:var(--ink-soft)}
+.calc .out b{display:block;font-size:44px;color:var(--water);font-family:var(--sans)}
+
+/* 研磨刻度 */
+.dialin{display:flex;gap:18px;margin:6px 0 22px}
+.dialin div{flex:1;text-align:center;background:var(--sheet);border:1.5px solid var(--line);border-radius:6px;padding:16px}
+.dialin div.base{border-color:var(--ink);border-width:2.5px}
+.dialin b{font-family:var(--hand);font-size:30px;display:block}
+.dialin span{font-size:18px;color:var(--ink-soft)}
+
+/* 表格 */
+table.t{border-collapse:collapse;width:100%;font-size:22px;background:var(--sheet)}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:12px 16px;text-align:left}
+table.t th{font-weight:500;color:var(--ink-soft);font-size:18px}
+
+/* 時間軸（確實是順序） */
+.timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:6px;position:relative}
+.timeline::before{content:"";position:absolute;left:0;right:0;top:30px;height:3px;background:var(--ink)}
+.step{padding:0 14px 0 0;position:relative}
+.step .t{display:inline-block;font-family:var(--sans);font-weight:700;font-size:24px;background:var(--paper);padding:0 8px 0 0;position:relative;color:var(--cherry);height:60px;line-height:60px}
+.step h3{font-family:var(--hand);font-size:26px;margin:6px 0 6px}
+.step p{font-size:18px;line-height:1.55;margin:0}
+.recipe{display:flex;gap:28px;margin-bottom:26px;flex-wrap:wrap}
+.recipe div{font-size:20px;color:var(--ink-soft)}
+.recipe b{display:block;font-size:34px;color:var(--ink)}
+
+/* 診斷器 / 測驗 */
+.chips{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.chips button,.quiz button{font:inherit;font-size:21px;padding:10px 20px;border-radius:24px;border:1.5px solid var(--ink);background:var(--sheet);color:var(--ink);cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.diag{display:none}
+.diag.show{display:block}
+.quiz{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.quiz .q{background:var(--sheet);border:1.5px solid var(--line);border-radius:6px;padding:20px}
+.quiz .q p{font-size:21px;margin:0 0 12px;line-height:1.55}
+.quiz button{display:block;width:100%;text-align:left;margin-bottom:8px;font-size:19px;border-radius:6px}
+.quiz button.right{background:#E3F0E6;border-color:#2E7D4F}
+.quiz button.wrong{background:#F6E1E4;border-color:var(--cherry)}
+.quiz .fb{font-size:17px;color:var(--ink-soft);min-height:2.4em;margin:6px 0 0}
+
+/* 迴圈 */
+.loop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 26px}
+.loop span{font-family:var(--hand);font-size:30px;border:2px solid var(--ink);border-radius:50%;width:118px;height:118px;display:grid;place-items:center;text-align:center;background:var(--sheet)}
+.loop span.hl{border-color:var(--cherry);color:var(--cherry)}
+.loop i{font-style:normal;font-size:30px}
+
+/* 手機：不縮放，改成可捲動的直排 */
+@media (max-width:760px){
+  body{overflow:auto}
+  .viewport{position:static;display:block}
+  .stage{width:100%;height:auto;transform:none!important}
+  .slide{position:relative;inset:auto;min-height:100svh;padding:calc(28px + env(safe-area-inset-top,0px)) 20px 120px 40px}
+  .carafe{left:10px;width:10px}
+  h1{font-size:40px} h2{font-size:30px} p,li{font-size:18px} .lead{font-size:20px}
+  .cols,.cols-3,.knobs,.quiz,.timeline,.spectrum{grid-template-columns:1fr}
+  .timeline::before{display:none}
+  .trace{position:static;margin-top:24px;font-size:13px}
+  .controls{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+  .loop span{width:84px;height:84px;font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="carafe" aria-hidden="true"><div class="level" id="level"></div></div>
+<div class="viewport"><main class="stage" id="stage">
+
+<!-- 1 -->
+<section class="slide cover" data-wiki="overview" data-src="" data-lg="">
+  <p class="sub">手沖咖啡入門</p>
+  <h1>為什麼我沖的咖啡又酸又苦？</h1>
+  <p class="lead">從「萃取」這個概念出發，學會看懂、沖好、調整你的第一杯手沖。用鍵盤 ← → 或右下角按鈕翻頁。</p>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-wiki="overview" data-src="" data-lg="LG1,LG2,LG3">
+  <h2>看完這份簡報，你會</h2>
+  <ol class="goals">
+    <li>用自己的話說出什麼是「萃取」，以及咖啡為什麼會太酸或太苦</li>
+    <li>知道手沖有哪些變因，每個變因會改變什麼</li>
+    <li>照著食譜沖出第一杯，並依味道一次調一個變因</li>
+  </ol>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-wiki="overview,extraction" data-src="S2" data-lg="LG1">
+  <h2>手沖到底在做什麼？</h2>
+  <div class="flow"><span>熱水</span><i>→</i><span>穿過咖啡粉</span><i>→</i><span>濾紙</span><i>→</i><span>杯子</span></div>
+  <p class="lead">水經過咖啡粉時，會把粉裡的酸、甜、苦和香氣「溶」出來。這個過程叫做 <span class="tag-cherry">萃取</span>。</p>
+  <div class="box" style="margin-top:26px;max-width:880px">
+    <h3>記住這句就好</h3>
+    <p>手沖的所有技巧，最後都在控制同一件事：溶出多少、溶得均不均勻。研究也指出，真正決定風味的是最後的濃度與萃取率。</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-wiki="extraction" data-src="S1" data-lg="LG1">
+  <h2>萃取可以用兩個數字描述</h2>
+  <div class="cols">
+    <div>
+      <div class="box" style="margin-bottom:18px">
+        <h3>濃度（TDS）</h3>
+        <p>杯子裡溶了多少咖啡物質，決定喝起來濃或淡。</p>
+        <p class="big" style="margin-top:10px">1.15–1.35%</p>
+      </div>
+      <div class="box">
+        <h3>萃取率</h3>
+        <p>咖啡粉有百分之幾被溶出來，決定萃得夠不夠。</p>
+        <p class="big" style="margin-top:10px">18–22%</p>
+      </div>
+      <p class="note">這兩個區間合起來，就是 SCA 的「金杯標準」：多數人覺得平衡的範圍。</p>
+    </div>
+    <figure style="margin:0">
+      <svg viewBox="0 0 460 420" width="100%" role="img" aria-label="金杯標準示意：橫軸萃取率、縱軸濃度，中間方框為理想區">
+        <line x1="60" y1="20" x2="60" y2="360" stroke="#2B1D16" stroke-width="2"/>
+        <line x1="60" y1="360" x2="440" y2="360" stroke="#2B1D16" stroke-width="2"/>
+        <rect x="170" y="130" width="160" height="110" fill="#D9A441" fill-opacity=".35" stroke="#D9A441" stroke-width="2.5"/>
+        <text x="250" y="190" text-anchor="middle" font-size="22" font-family="LXGW WenKai TC, serif" fill="#2B1D16">金杯區</text>
+        <text x="170" y="384" text-anchor="middle" font-size="16" fill="#5E4F47">18%</text>
+        <text x="330" y="384" text-anchor="middle" font-size="16" fill="#5E4F47">22%</text>
+        <text x="52" y="134" text-anchor="end" font-size="16" fill="#5E4F47">1.35%</text>
+        <text x="52" y="244" text-anchor="end" font-size="16" fill="#5E4F47">1.15%</text>
+        <text x="250" y="412" text-anchor="middle" font-size="17" fill="#2B1D16">萃取率 →</text>
+        <text x="20" y="200" font-size="17" fill="#2B1D16" transform="rotate(-90 20 200)" text-anchor="middle">濃度 →</text>
+        <text x="110" y="300" text-anchor="middle" font-size="17" fill="#2F6B8A">萃取不足</text>
+        <text x="390" y="300" text-anchor="middle" font-size="17" fill="#2B1D16">過度萃取</text>
+        <text x="250" y="70" text-anchor="middle" font-size="17" fill="#5E4F47">偏濃</text>
+        <text x="250" y="330" text-anchor="middle" font-size="17" fill="#5E4F47">偏淡</text>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-wiki="extraction" data-src="S5" data-lg="LG1">
+  <h2>萃得太少、太多，味道都會出問題</h2>
+  <div class="spectrum">
+    <div class="under"><h3>萃取不足</h3><p>溶出太少。味道空洞、有讓人皺嘴的酸，集中在舌頭兩側。</p></div>
+    <div class="sweet"><h3>甜蜜點</h3><p>甜感完整，酸質恰好撐起甜味，味道集中又平衡。</p></div>
+    <div class="over"><h3>過度萃取</h3><p>溶出太多。苦味卡在舌根、乾澀，像泡太久的紅茶。</p></div>
+  </div>
+  <p class="lead" style="margin-top:30px">所以「酸」和「苦」不只是咖啡豆的個性，常常是在告訴你：這杯萃得不對。</p>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-wiki="extraction,water-temperature" data-src="S2" data-lg="LG1">
+  <h2>研究發現：終點比路線重要</h2>
+  <div class="cups" aria-label="三杯用不同水溫沖煮的咖啡">
+    <div class="cup"><svg width="88" height="80" viewBox="0 0 110 100"><path d="M10 20h80l-8 70H18z" fill="#2B1D16"/><path d="M90 35c18 0 18 30 0 30" fill="none" stroke="#2B1D16" stroke-width="5"/></svg><b>87°C</b></div>
+    <div class="cup"><svg width="88" height="80" viewBox="0 0 110 100"><path d="M10 20h80l-8 70H18z" fill="#2B1D16"/><path d="M90 35c18 0 18 30 0 30" fill="none" stroke="#2B1D16" stroke-width="5"/></svg><b>90°C</b></div>
+    <div class="cup"><svg width="88" height="80" viewBox="0 0 110 100"><path d="M10 20h80l-8 70H18z" fill="#2B1D16"/><path d="M90 35c18 0 18 30 0 30" fill="none" stroke="#2B1D16" stroke-width="5"/></svg><b>93°C</b></div>
+  </div>
+  <p class="lead">UC Davis 用三種水溫沖煮，並調整研磨和時間，讓三杯最後的濃度與萃取率一樣。結果：品評員喝不出差別。</p>
+  <div class="box" style="margin-top:18px;max-width:960px"><h3>意思是？</h3><p>水溫、研磨、時間都重要，但它們是透過改變「萃取結果」來影響味道。水溫主要影響的是萃取速度。<br><span class="note">研究限制：只測了一支水洗豆，風味特殊的豆子可能對水溫更敏感。</span></p></div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-wiki="overview" data-src="" data-lg="LG2">
+  <h2>你手上有五個旋鈕</h2>
+  <div class="knobs">
+    <div class="knob first"><div class="dial" style="--r:40deg"></div><h3>研磨度</h3><p>萃取多少<br><span class="tag-cherry">最先調它</span></p></div>
+    <div class="knob"><div class="dial" style="--r:-30deg"></div><h3>粉水比</h3><p>喝起來<br>濃或淡</p></div>
+    <div class="knob"><div class="dial" style="--r:10deg"></div><h3>水溫</h3><p>萃取<br>速度</p></div>
+    <div class="knob"><div class="dial" style="--r:-60deg"></div><h3>悶蒸＋注水</h3><p>萃得<br>均不均勻</p></div>
+    <div class="knob"><div class="dial" style="--r:70deg"></div><h3>水質</h3><p>酸度<br>怎麼表現</p></div>
+  </div>
+  <p class="lead" style="margin-top:30px">接下來一個一個看。重點不是全部背起來，而是知道「哪個旋鈕管什麼」。</p>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-wiki="brew-ratio,bloom" data-src="S3,S6,S4" data-lg="LG2">
+  <h2>粉水比：先抓 60 g/L</h2>
+  <div class="cols">
+    <div>
+      <p>每公升水配 60 g 咖啡粉。也可以寫成「水 ÷ 粉 ≈ 16.7」。</p>
+      <p>換算很簡單：<b>水量 × 0.06 ＝ 粉量</b>。</p>
+      <p>Hoffmann 的 V60 食譜用 30 g 粉配 500 mL 水，剛好就是這個比例。</p>
+      <p class="note">粉水比管「濃淡」；要調「萃取多少」，主要靠研磨度。</p>
+    </div>
+    <div class="calc">
+      <label for="water">我想沖 <b id="wOut" data-nocheck>250</b> mL</label>
+      <input id="water" type="range" min="150" max="600" step="10" value="250">
+      <div class="out">
+        <div>需要咖啡粉<b id="dose" data-nocheck>15.0 g</b></div>
+        <div>悶蒸用水（粉重的 2 倍）<b id="bloomW" data-nocheck>30 mL</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-wiki="grind-size" data-src="S5" data-lg="LG2">
+  <h2>研磨度：最重要的旋鈕</h2>
+  <p>磨得越細，水流越慢、萃得越多；越粗則相反。每支豆子都不一樣，沒有萬用刻度，所以要「dial in」。</p>
+  <div class="dialin" aria-label="一次沖三杯比較">
+    <div><b>細 1 格</b><span>比較這杯</span></div>
+    <div class="base"><b>基準刻度</b><span>上次用的，或磨豆機中間</span></div>
+    <div><b>粗 1 格</b><span>比較這杯</span></div>
+  </div>
+  <ul class="plain">
+    <li>其他條件（水溫、粉量、手法）全部不變</li>
+    <li>每次只差 1–2 格，選最好喝的那杯當新基準，再來一輪</li>
+    <li>V60 這類小濾杯，從「中細研磨」開始</li>
+  </ul>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-wiki="water-temperature,conflicts" data-src="S1,S2,S3,S5" data-lg="LG2">
+  <h2>水溫：各家說法不同，怎麼辦？</h2>
+  <div class="cols">
+    <table class="t">
+      <tr><th>誰說的</th><th>建議水溫</th></tr>
+      <tr><td>Hoffmann（V60 食譜）</td><td>97°C</td></tr>
+      <tr><td>Blue Bottle</td><td>195–205°F（約 90.5–96°C）</td></tr>
+      <tr><td>金杯標準最低水溫</td><td>92°C</td></tr>
+    </table>
+    <div>
+      <div class="box"><h3>研究結論</h3><p>水溫會改變萃取速度；只要最後濃度和萃取率一樣，87–93°C 喝不出差別。</p></div>
+      <div class="box" style="margin-top:16px"><h3>給初學者</h3><p>固定用剛離火的熱水，不要每次改。把力氣花在調研磨度。</p></div>
+    </div>
+  </div>
+  <p class="warn">這裡的數字互相不一致，Wiki 把它記在「來源衝突 C1」，簡報不宣稱唯一正確的水溫。</p>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-wiki="bloom" data-src="S3,S4" data-lg="LG2">
+  <h2>悶蒸：先讓咖啡「吐氣」</h2>
+  <div class="cols">
+    <div>
+      <p>熱水第一次碰到咖啡粉時，粉會釋放二氧化碳，表面冒泡膨脹。</p>
+      <p>先倒少量水、等一下，讓氣體排出，後面的水才能均勻接觸粉。</p>
+      <p class="note">越新鮮的咖啡二氧化碳越多，泡泡也越多；深焙通常比淺焙明顯。</p>
+    </div>
+    <div class="box">
+      <h3>怎麼做</h3>
+      <ul class="plain">
+        <li>水量約為粉重的 2 倍（也有人用 3–4 倍）</li>
+        <li>Hoffmann：30 g 粉倒 60 mL，立刻搖晃濾杯，靜置最多 45 秒</li>
+      </ul>
+      <p class="warn" style="margin-top:14px">要搖、要攪還是不動？業界沒有定論。本簡報教「搖」，和入門食譜一致。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-wiki="pouring-agitation" data-src="S4" data-lg="LG2">
+  <h2>注水與擾動：讓每一顆粉都被照顧到</h2>
+  <div class="cols">
+    <figure style="margin:0">
+      <svg viewBox="-10 0 450 300" width="100%" role="img" aria-label="通道效應示意：水只從粉床中一條路徑流下">
+        <path d="M40 40h340L230 270h-40z" fill="#E9E2DC" stroke="#2B1D16" stroke-width="2.5"/>
+        <path d="M70 70h280L225 245h-30z" fill="#6B4A3A"/>
+        <path d="M205 62 C200 120 215 170 208 250" stroke="#2F6B8A" stroke-width="12" fill="none" stroke-linecap="round"/>
+        <line x1="214" y1="150" x2="330" y2="110" stroke="#2F6B8A" stroke-width="1.5"/><text x="334" y="108" font-size="18" fill="#2F6B8A">水只走</text><text x="334" y="130" font-size="18" fill="#2F6B8A">這條路</text>
+        <line x1="130" y1="110" x2="40" y2="200" stroke="#5E4F47" stroke-width="1.5"/><text x="0" y="222" font-size="18" fill="#5E4F47">旁邊的粉</text><text x="0" y="246" font-size="18" fill="#5E4F47">幾乎沒碰到水</text>
+      </svg>
+    </figure>
+    <div>
+      <div class="box"><h3>通道效應</h3><p>水只從幾條路徑流走：有些粉萃太多、有些萃太少，萃取不均勻。適度攪拌或搖晃可以減少它。</p></div>
+      <div class="box" style="margin-top:16px"><h3>但別太用力</h3><p>擾動過度會把細粉帶到底部堵住濾紙，水流變慢，容易過度萃取。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-wiki="water-quality" data-src="S1,S6" data-lg="LG2">
+  <h2>水質：看「鹼度」，不是 pH</h2>
+  <div class="cols">
+    <div>
+      <p>同樣曬了一整天太陽，石椅比木椅燙得多、也燙得久，因為它存了更多熱。</p>
+      <p><span class="tag-water">pH</span> 像溫度計讀數；<span class="tag-water">鹼度</span> 像存了多少熱，代表水能中和多少酸。</p>
+    </div>
+    <div class="box">
+      <h3>為什麼重要</h3>
+      <p>你嚐到的酸 ≈ 咖啡萃出的酸 − 被水的鹼度中和掉的部分。鹼度太高，咖啡明亮的酸會被「吃掉」，喝起來平淡。</p>
+    </div>
+  </div>
+  <ul class="plain" style="margin-top:24px">
+    <li>避開有漂白水味的水；用過濾水或軟水瓶裝水</li>
+    <li>SCA 傳承標準的鹼度目標約 40 ppm（SCA 也註明舊標準正在更新）</li>
+  </ul>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-wiki="v60-recipe" data-src="S3" data-lg="LG3">
+  <h2>動手：Hoffmann 的 V60 食譜</h2>
+  <div class="recipe">
+    <div>咖啡粉<b>30 g</b></div>
+    <div>水<b>500 mL</b></div>
+    <div>水溫<b>97°C</b></div>
+    <div>研磨<b>中細</b></div>
+    <div>一人份<b>15 g＋250 mL</b></div>
+  </div>
+  <div class="timeline">
+    <div class="step"><span class="t">準備</span><h3>濕濾紙、挖凹洞</h3><p>熱水沖濕濾紙去紙味；粉倒中央，中間挖個小洞。</p></div>
+    <div class="step"><span class="t">0:00</span><h3>悶蒸</h3><p>倒 60 mL，讓粉全濕，立刻搖晃濾杯，靜置最多 45 秒。</p></div>
+    <div class="step"><span class="t">0:45</span><h3>第一段注水</h3><p>1:15 前注到 300 mL，帶一點擾動。</p></div>
+    <div class="step"><span class="t">1:15</span><h3>第二段注水</h3><p>放慢、輕柔，1:45 前注到 500 mL。</p></div>
+    <div class="step"><span class="t">收尾</span><h3>攪、搖、等滴完</h3><p>順逆各輕攪一次，最後輕搖讓粉床平整，等它滴完。</p></div>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-wiki="troubleshooting" data-src="S4,S5,S6" data-lg="LG3">
+  <h2>喝一口：這杯怎麼了？</h2>
+  <p class="note" style="margin-top:-12px;margin-bottom:16px">點選最接近的感覺。</p>
+  <div class="chips" role="group" aria-label="選擇喝起來的感覺">
+    <button data-d="sour" aria-pressed="false">很酸、皺嘴</button>
+    <button data-d="bitter" aria-pressed="false">很苦、乾澀</button>
+    <button data-d="weak" aria-pressed="false">太淡、水水的</button>
+    <button data-d="flat" aria-pressed="false">酸不見了、平淡</button>
+    <button data-d="slow" aria-pressed="false">水流超慢、偏苦</button>
+  </div>
+  <div class="box" aria-live="polite" style="min-height:150px">
+    <div class="diag show" data-for="none"><p>先選一個感覺，這裡會告訴你下一杯怎麼調。</p></div>
+    <div class="diag" data-for="sour"><h3>萃取不足</h3><p>下一杯磨細一點。酸感集中在舌頭兩側、讓人皺嘴，是典型訊號。</p></div>
+    <div class="diag" data-for="bitter"><h3>過度萃取</h3><p>下一杯磨粗一點。苦味卡在舌根、想喝水清口，是典型訊號。</p></div>
+    <div class="diag" data-for="weak"><h3>濃度太低</h3><p>增加粉量，也就是調整粉水比。</p></div>
+    <div class="diag" data-for="flat"><h3>水的鹼度可能太高</h3><p>鹼度會中和咖啡的酸，試著換軟一點的水。</p></div>
+    <div class="diag" data-for="slow"><h3>細粉堵塞、擾動過度</h3><p>減少攪拌，研磨也粗一點。</p></div>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-wiki="troubleshooting,grind-size" data-src="S5" data-lg="LG3">
+  <h2>調整的迴圈：一次只改一個</h2>
+  <div class="loop">
+    <span>沖</span><i>→</i><span>喝</span><i>→</i><span>判斷</span><i>→</i><span class="hl">只改<br>一格</span><i>↺</i>
+  </div>
+  <ul class="plain">
+    <li>同時改兩個變因，你就不知道是哪個造成改變</li>
+    <li>研磨每次只差 1–2 格</li>
+    <li>先認識自己的口味：愛喝苦的人較難察覺過萃，愛喝酸的人較能接受萃取不足</li>
+  </ul>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-wiki="extraction,troubleshooting,brew-ratio" data-src="S1,S5,S6" data-lg="LG1,LG2,LG3">
+  <h2>小測驗</h2>
+  <div class="quiz">
+    <div class="q" data-answer="b">
+      <p>這杯咖啡酸到讓人皺嘴，下一杯應該？</p>
+      <button data-o="a">磨粗一點</button>
+      <button data-o="b">磨細一點</button>
+      <button data-o="c">水溫和研磨一起改</button>
+      <p class="fb" aria-live="polite"></p>
+      <p class="diag fb-right">對！皺嘴的酸是萃取不足，磨細可以萃多一點。</p>
+      <p class="diag fb-wrong">再想想：皺嘴的酸代表萃得不夠，而且一次只改一個變因。</p>
+    </div>
+    <div class="q" data-answer="b">
+      <p>想沖 300 mL，用 60 g/L 的比例，需要多少粉？</p>
+      <button data-o="a">15 g</button>
+      <button data-o="b">18 g</button>
+      <button data-o="c">30 g</button>
+      <p class="fb" aria-live="polite"></p>
+      <p class="diag fb-right">對！300 × 0.06 ＝ 18 g。</p>
+      <p class="diag fb-wrong">用「水量 × 0.06」算算看。</p>
+    </div>
+    <div class="q" data-answer="b">
+      <p>金杯標準的「萃取率」區間是？</p>
+      <button data-o="a">1.15%–1.35%</button>
+      <button data-o="b">18%–22%</button>
+      <button data-o="c">60%</button>
+      <p class="fb" aria-live="polite"></p>
+      <p class="diag fb-right">對！1.15%–1.35% 是濃度（TDS）的區間。</p>
+      <p class="diag fb-wrong">注意別和濃度（TDS）的區間搞混。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-wiki="index" data-src="" data-lg="">
+  <h2>帶走三件事</h2>
+  <div class="cols-3">
+    <div class="box"><h3>酸苦是訊號</h3><p>酸多半是萃不夠，苦多半是萃太多。</p></div>
+    <div class="box"><h3>先調研磨度</h3><p>它是影響萃取最直接的旋鈕。</p></div>
+    <div class="box"><h3>一次改一個</h3><p>沖、喝、判斷、只改一格，再沖。</p></div>
+  </div>
+  <div class="box" style="margin-top:30px">
+    <h3>這份簡報怎麼做出來的</h3>
+    <p data-nocheck>6 篇來源 → 13 頁 LLM Wiki → 18 張投影片。每張投影片底部都標了它用到的 Wiki 頁面與來源，點連結就能回到 Wiki 查證。</p>
+    <p style="margin-top:8px"><a id="wikiHome" href="#">開啟 LLM Wiki 索引</a></p>
+  </div>
+</section>
+
+</main></div>
+
+<nav class="controls" aria-label="翻頁">
+  <button id="prev" aria-label="上一張">‹</button>
+  <span id="count" aria-live="polite"></span>
+  <button id="next" aria-label="下一張">›</button>
+</nav>
+
+<script>
+(function(){
+  const PAGES={overview:"手沖咖啡總覽",extraction:"萃取","brew-ratio":"粉水比","grind-size":"研磨度","water-temperature":"水溫",bloom:"悶蒸","pouring-agitation":"注水與擾動","water-quality":"水質","v60-recipe":"V60 入門食譜",troubleshooting:"風味診斷",conflicts:"來源衝突",index:"Wiki 索引"};
+  const SRC={S1:"SCA 傳承標準",S2:"SCA／UC Davis 水溫研究",S3:"HARIO：Hoffmann V60",S4:"Perfect Daily Grind：悶蒸",S5:"Blue Bottle：研磨調整",S6:"SCA《25》：水與酸度"};
+  // 在 GitHub Pages 上自動推回 repo 網址；本機開啟則用相對路徑
+  let base="../";
+  const h=location.hostname;
+  if(h.endsWith("github.io")){
+    const user=h.split(".")[0]; const repo=location.pathname.split("/").filter(Boolean)[0]||"";
+    base=`https://github.com/${user}/${repo}/blob/main/`;
+  }
+  const slides=[...document.querySelectorAll(".slide")];
+  slides.forEach(s=>{
+    const w=(s.dataset.wiki||"").split(",").filter(Boolean);
+    const src=(s.dataset.src||"").split(",").filter(Boolean);
+    const f=document.createElement("footer"); f.className="trace";
+    const wl=w.map(p=>`<a href="${base}wiki/${p}.md" target="_blank" rel="noopener">${PAGES[p]||p}</a>`).join("、");
+    const sl=src.map(x=>`<a href="${base}raw/" target="_blank" rel="noopener" title="${SRC[x]}">${x}</a>`).join("、");
+    f.innerHTML=`<span><strong>出處 Wiki：</strong>${wl}</span>`+(sl?`<span><strong>來源：</strong>${sl}</span>`:"");
+    s.appendChild(f);
+  });
+  document.getElementById("wikiHome").href=base+"wiki/index.md";
+
+  let i=0; const lvl=document.getElementById("level"), cnt=document.getElementById("count");
+  const mobile=()=>window.matchMedia("(max-width:760px)").matches;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    if(mobile()){ slides.forEach(s=>s.classList.add("active")); slides[i].scrollIntoView({block:"start"}); }
+    else slides.forEach((s,k)=>s.classList.toggle("active",k===i));
+    lvl.style.height=((i+1)/slides.length*100)+"%";
+    cnt.textContent=`${i+1} / ${slides.length}`;
+    if(location.hash!=="#"+(i+1)) history.replaceState(null,"","#"+(i+1));
+  }
+  function fit(){
+    const st=document.getElementById("stage");
+    if(mobile()){st.style.transform="none";return;}
+    const sc=Math.min(innerWidth/1280,innerHeight/720); st.style.transform=`scale(${sc})`;
+  }
+  document.getElementById("prev").onclick=()=>show(i-1);
+  document.getElementById("next").onclick=()=>show(i+1);
+  addEventListener("keydown",e=>{
+    if(["INPUT","BUTTON"].includes(document.activeElement.tagName)&&e.key===" ")return;
+    if(["ArrowRight","PageDown"," "].includes(e.key)){e.preventDefault();show(i+1)}
+    if(["ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();show(i-1)}
+    if(e.key==="Home")show(0); if(e.key==="End")show(slides.length-1);
+  });
+  let tx=null;
+  addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
+  addEventListener("touchend",e=>{if(tx===null||mobile())return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)show(i+(dx<0?1:-1));tx=null});
+  addEventListener("resize",()=>{fit();show(i)});
+  addEventListener("hashchange",()=>{const n=parseInt(location.hash.slice(1),10);if(n&&n-1!==i)show(n-1)});
+
+  // 粉水比計算器：60 g/L，悶蒸＝粉重×2
+  const wr=document.getElementById("water");
+  function calc(){const w=+wr.value;document.getElementById("wOut").textContent=w;
+    const d=w*0.06;document.getElementById("dose").textContent=d.toFixed(1)+" g";
+    document.getElementById("bloomW").textContent=Math.round(d*2)+" mL";}
+  wr.addEventListener("input",calc); calc();
+
+  // 診斷器
+  const chips=[...document.querySelectorAll(".chips button")];
+  chips.forEach(b=>b.onclick=()=>{
+    chips.forEach(c=>c.setAttribute("aria-pressed",c===b));
+    document.querySelectorAll(".diag[data-for]").forEach(d=>d.classList.toggle("show",d.dataset.for===b.dataset.d));
+  });
+
+  // 測驗
+  document.querySelectorAll(".quiz .q").forEach(q=>{
+    const fb=q.querySelector(".fb");
+    q.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      q.querySelectorAll("button").forEach(x=>x.classList.remove("right","wrong"));
+      const ok=b.dataset.o===q.dataset.answer; b.classList.add(ok?"right":"wrong");
+      fb.textContent=q.querySelector(ok?".fb-right":".fb-wrong").textContent;
+    });
+  });
+
+  const start=parseInt(location.hash.slice(1),10);
+  fit(); show(start?start-1:0);
+})();
+</script>
+</body>
+</html>
